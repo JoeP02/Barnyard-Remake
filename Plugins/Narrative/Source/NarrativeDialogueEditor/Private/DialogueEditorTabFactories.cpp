@@ -68,7 +68,7 @@ FDialogueDetailsSummoner::FDialogueDetailsSummoner(TSharedPtr<class FDialogueGra
 {
 
 	TabLabel = LOCTEXT("DialogueDetailsLabel", "Details");
-	TabIcon = FSlateIcon(FEditorStyle::GetStyleSetName(), "Kismet.Tabs.Components");
+	TabIcon = FSlateIcon(FAppStyle::GetAppStyleSetName(), "Kismet.Tabs.Components");
 
 	bIsSingleton = true;
 

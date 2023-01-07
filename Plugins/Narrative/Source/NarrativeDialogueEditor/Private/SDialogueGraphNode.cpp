@@ -62,7 +62,7 @@ void SDialogueGraphNode::UpdateGraphNode()
 .VAlign(VAlign_Fill)
 [
 	SNew(SBorder)
-	.BorderImage(FEditorStyle::GetBrush("BTEditor.Graph.BTNode.Body"))
+	.BorderImage(FAppStyle::GetBrush("BTEditor.Graph.BTNode.Body"))
 	.BorderBackgroundColor(this, &SDialogueGraphNode::GetBorderColor)
 		[
 			SNew(SOverlay)
@@ -118,7 +118,7 @@ void SDialogueGraphNode::UpdateGraphNode()
 					.Visibility(this, &SDialogueGraphNode::GetCondsVis)
 					.Justification(ETextJustify::Center)
 					.AutoWrapText(true)
-					.TextStyle(FEditorStyle::Get(), TEXT("PhysicsAssetEditor.Tools.Font"))
+					.TextStyle(FAppStyle::Get(), TEXT("PhysicsAssetEditor.Tools.Font"))
 					.ColorAndOpacity(this, &SDialogueGraphNode::GetCondsColor)
 					]
 					+ SVerticalBox::Slot()
@@ -131,7 +131,7 @@ void SDialogueGraphNode::UpdateGraphNode()
 						.ColorAndOpacity(this, &SDialogueGraphNode::GetNodeTitleColor)
 						.Justification(ETextJustify::Center)
 						.Clipping(EWidgetClipping::Inherit)
-						.TextStyle(FEditorStyle::Get(), TEXT("PhysicsAssetEditor.Tools.Font"))
+						.TextStyle(FAppStyle::Get(), TEXT("PhysicsAssetEditor.Tools.Font"))
 					]
 					+ SVerticalBox::Slot()
 					.VAlign(VAlign_Bottom)
@@ -153,7 +153,7 @@ void SDialogueGraphNode::UpdateGraphNode()
 						.Visibility(this, &SDialogueGraphNode::GetEventsVis)
 						.Justification(ETextJustify::Center)
 						.AutoWrapText(true)
-						.TextStyle(FEditorStyle::Get(), TEXT("PhysicsAssetEditor.Tools.Font"))
+						.TextStyle(FAppStyle::Get(), TEXT("PhysicsAssetEditor.Tools.Font"))
 						.ColorAndOpacity(this, &SDialogueGraphNode::GetEventsColor)
 						]
 				]
@@ -441,7 +441,7 @@ TSharedRef<SWidget> SDialogueGraphNodePin::GetDefaultValueWidget()
 
 const FSlateBrush* SDialogueGraphNodePin::GetPinBorder() const
 {
-	return FEditorStyle::GetBrush(TEXT("Graph.StateNode.Body"));
+	return FAppStyle::GetBrush(TEXT("Graph.StateNode.Body"));
 }
 
 #undef LOCTEXT_NAMESPACE

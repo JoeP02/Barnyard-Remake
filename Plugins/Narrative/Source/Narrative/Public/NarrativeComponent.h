@@ -178,6 +178,7 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -528,7 +529,7 @@ protected:
 	/**
 	Create a dialogue object from the supplied dialogue class and params
 	*/
-	virtual class UDialogue* MakeDialogue(TSubclassOf<class UDialogue> DialogueClass, class AActor* NPC, FName StartFromID = NAME_None);
+	virtual class UDialogue* MakeDialogue(TSubclassOf<class UDialogue> DialogueClass);
 
 
 public:

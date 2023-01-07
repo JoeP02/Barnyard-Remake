@@ -139,7 +139,16 @@ bool UQuest::Initialize(class UNarrativeComponent* InitializingComp, const FName
 				OwningComp->OnLoadComplete.AddUniqueDynamic(this, &UQuest::OnLoadComplete);
 
 				QuestCompletion = EQuestCompletion::QC_Started;
-				EnterState(QuestStartID.IsNone() ? QuestStartState : GetState(QuestStartID), OwningComp);
+
+				UQuestState* StartState = QuestStartID.IsNone() ? QuestStartState : GetState(QuestStartID);
+
+				if (!StartState)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Tried starting quest %s using start state ID %s but couldn't find a node with that ID. Be careful about renaming node IDs as this can break old save files/code with stale IDs."), *QuestName.ToString(), *QuestStartID.ToString());
+					StartState = QuestStartState;
+				}
+
+				EnterState(StartState, OwningComp);
 				return true;
 			}
 		}

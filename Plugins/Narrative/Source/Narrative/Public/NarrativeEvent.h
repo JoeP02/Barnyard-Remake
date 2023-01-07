@@ -8,12 +8,14 @@
 
 /**
  * Subclass this in BP to execute some logic when a particular quest step or dialogue option is reached  */
-UCLASS(Abstract, Blueprintable, EditInlineNew, AutoExpandCategories = ("Default"))
+UCLASS(Abstract, BlueprintType, Blueprintable, EditInlineNew, AutoExpandCategories = ("Default"))
 class NARRATIVE_API UNarrativeEvent : public UObject
 {
 	GENERATED_BODY()
 
 public:
+
+	virtual UWorld* GetWorld() const override;
 
 	/**
 	If true, run this event on the players shared narrative comp instead of their local one

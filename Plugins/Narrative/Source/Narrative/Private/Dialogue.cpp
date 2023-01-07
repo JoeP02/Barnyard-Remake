@@ -11,8 +11,6 @@
 #include "GameFramework/Character.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
-#include "LevelSequencePlayer.h"
-#include "LevelSequenceActor.h"
 #include "NarrativeDialogueSettings.h"
 
 UDialogue::UDialogue()
@@ -505,6 +503,10 @@ void UDialogue::ReplaceStringVariables(FText& Line)
 	}
 }
 
+void UDialogue::Tick_Implementation(const float DeltaTime)
+{
+}
+
 void UDialogue::PlayNextNPCReply()
 {
 	//Keep going through the NPC replies until we run out
@@ -736,6 +738,7 @@ void UDialogue::PlayDialogueAnimation_Implementation(class UDialogueNode* Node, 
 					if (SkelMeshComp->GetAnimInstance())
 					{
 						SkelMeshComp->GetAnimInstance()->Montage_Play(Line.DialogueMontage);
+						break;
 					}
 				}
 			}
@@ -782,7 +785,21 @@ void UDialogue::PlayDialogueSound_Implementation(const FDialogueLine& Line)
 		//If this dialogue was supplied an NPC actor we should play the sound at the location of that actor
 		if (NPCActor)
 		{
-			DialogueAudio = UGameplayStatics::SpawnSoundAtLocation(OwningComp, Line.DialogueSound, NPCActor->GetActorLocation(), NPCActor->GetActorForwardVector().Rotation());
+			//In order to play spatialized audio, look for a skeletal mesh component on the NPC actor with the speakers tag added 
+			TArray<UActorComponent*> Meshes = NPCActor->GetComponentsByTag(USkeletalMeshComponent::StaticClass(), CurrentSpeaker.SpeakerID);
+
+			if (Meshes.Num())
+			{
+				for (auto& Mesh : Meshes)
+				{
+					DialogueAudio = UGameplayStatics::SpawnSoundAtLocation(OwningComp, Line.DialogueSound, NPCActor->GetActorLocation(), NPCActor->GetActorForwardVector().Rotation());
+					break;
+				}
+			}
+			else
+			{
+				DialogueAudio = UGameplayStatics::SpawnSoundAtLocation(OwningComp, Line.DialogueSound, NPCActor->GetActorLocation(), NPCActor->GetActorForwardVector().Rotation());
+			}
 		}
 		else //Else just play 2D audio 
 		{
@@ -803,7 +820,7 @@ void UDialogue::PlayNPCDialogue_Implementation(class UDialogueNode_NPC* NPCReply
 	}
 	else if (SpeakerInfo.DefaultShot)
 	{
-		PlayDialogueShot(SpeakerInfo.DefaultShot, SpeakerInfo.DefaultShotSettings);
+		PlayDialogueShot(SpeakerInfo.DefaultShot, FMovieSceneSequencePlaybackSettings());
 	}
 	else
 	{

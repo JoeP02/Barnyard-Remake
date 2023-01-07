@@ -7,6 +7,10 @@
 #include "LevelSequencePlayer.h"
 #include "DialogueSM.h"
 #include "MovieSceneSequencePlayer.h"
+#include "MovieScene/Public/MovieSceneSequencePlaybackSettings.h"
+#include "MovieScene/Public/MovieSceneSequenceTickInterval.h"
+#include "LevelSequencePlayer.h"
+#include "LevelSequenceActor.h"
 #include "Dialogue.generated.h"
 
 USTRUCT(BlueprintType)
@@ -22,13 +26,13 @@ struct FSpeakerInfo
 
 		DefaultShot = nullptr;
 
-		DefaultShotSettings = FMovieSceneSequencePlaybackSettings();
+		//DefaultShotSettings = FMovieSceneSequencePlaybackSettings();
 
-		FMovieSceneSequenceLoopCount InfiniteLooping;
-		InfiniteLooping.Value = -1;
+		//FMovieSceneSequenceLoopCount InfiniteLooping;
+		//InfiniteLooping.Value = -1;
 
-		DefaultShotSettings.bPauseAtEnd = true;
-		DefaultShotSettings.LoopCount = InfiniteLooping;
+		//DefaultShotSettings.bPauseAtEnd = true;
+		//DefaultShotSettings.LoopCount = InfiniteLooping;
 	}
 
 	//The name of this speaker. 
@@ -40,8 +44,8 @@ struct FSpeakerInfo
 	class ULevelSequence* DefaultShot = nullptr;
 
 	//Default playback settings for when this speakers shot is playing
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sequences")
-	struct FMovieSceneSequencePlaybackSettings DefaultShotSettings;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sequences")
+	//struct FMovieSceneSequencePlaybackSettings DefaultShotSettings = FMovieSceneSequencePlaybackSettings();
 
 	//Custom node colour for this NPC in the graph
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sequences")
@@ -49,7 +53,7 @@ struct FSpeakerInfo
 
 };
 
-//Created at runtime, but also used as a template, similar to UWidgetTrees in UWidgetBlueprints. 
+//Represents an instance of a running dialogue. Created at runtime, but also used as a template, similar to UWidgetTrees in UWidgetBlueprints. 
 UCLASS(Blueprintable, BlueprintType)
 class NARRATIVE_API UDialogue : public UObject
 {
@@ -179,6 +183,15 @@ public:
 
 	//Replace any {MyVar} style variables in a dialogue line with their value 
 	virtual void ReplaceStringVariables(FText& Line);
+
+public:
+
+	/*
+	* Tick function for dialogue
+	*/
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue")
+	void Tick(const float DeltaTime);
+	virtual void Tick_Implementation(const float DeltaTime);
 
 protected:
 

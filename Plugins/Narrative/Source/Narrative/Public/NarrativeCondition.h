@@ -9,12 +9,14 @@
 /**
  * Subclass this in blueprint to conditionally include or exclude dialogue/quest options 
  */
-UCLASS(Abstract, Blueprintable, EditInlineNew, AutoExpandCategories = ("Default"))
+UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, AutoExpandCategories = ("Default"))
 class NARRATIVE_API UNarrativeCondition : public UObject
 {
 	GENERATED_BODY()
 
 public:
+
+	virtual UWorld* GetWorld() const override;
 
 	/** Check whether this condition is true or false*/
 	UFUNCTION(BlueprintNativeEvent, Category = "Conditions")

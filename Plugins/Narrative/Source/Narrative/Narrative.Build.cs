@@ -9,6 +9,8 @@ public class Narrative : ModuleRules
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         bLegacyPublicIncludePaths = false;
 
+        PrecompileForTargets = PrecompileTargetsType.Any;
+
         PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...

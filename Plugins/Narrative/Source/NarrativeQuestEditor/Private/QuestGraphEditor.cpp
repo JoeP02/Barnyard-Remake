@@ -908,7 +908,7 @@ TSharedRef<class SGraphEditor> FQuestGraphEditor::CreateQuestGraphEditorWidget(U
 	// Make title bar
 	TSharedRef<SWidget> TitleBarWidget =
 		SNew(SBorder)
-		.BorderImage(FEditorStyle::GetBrush(TEXT("Graph.TitleBackground")))
+		.BorderImage(FAppStyle::GetBrush(TEXT("Graph.TitleBackground")))
 		.HAlign(HAlign_Fill)
 		[
 			SNew(SHorizontalBox)
@@ -918,7 +918,7 @@ TSharedRef<class SGraphEditor> FQuestGraphEditor::CreateQuestGraphEditorWidget(U
 		[
 			SNew(STextBlock)
 			.Text(this, &FQuestGraphEditor::GetQuestEditorTitle)
-			.TextStyle(FEditorStyle::Get(), TEXT("GraphBreadcrumbButtonText"))
+			.TextStyle(FAppStyle::Get(), TEXT("GraphBreadcrumbButtonText"))
 		]
 		];
 

@@ -102,7 +102,7 @@ void FQuestEditorDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLayout)
 				.ValueContent()
 				[
 					SNew(SButton)
-					.ButtonStyle(FEditorStyle::Get(), "RoundButton")
+					.ButtonStyle(FAppStyle::Get(), "RoundButton")
 					.OnClicked(this, &FQuestEditorDetails::AddMultipleTasksClicked)
 					[
 						SNew(STextBlock)

@@ -65,7 +65,7 @@ void FQuestEditorToolbar::FillModesToolbar(FToolBarBuilder& ToolbarBuilder)
 		.OnSetActiveMode(SetActiveMode)
 		.CanBeSelected(QuestEditorPtr.Get(), &FQuestGraphEditor::CanAccessQuestEditorMode)
 		.ToolTipText(LOCTEXT("QuestEditorModeButtonTooltip", "Switch to Quest Designer Mode"))
-		.IconImage(FEditorStyle::GetBrush("BTEditor.SwitchToBehaviorTreeMode"))
+		.IconImage(FAppStyle::GetBrush("BTEditor.SwitchToBehaviorTreeMode"))
 		//.SmallIconImage(FEditorStyle::GetBrush("BTEditor.SwitchToBehaviorTreeMode.Small"))
 	);
 

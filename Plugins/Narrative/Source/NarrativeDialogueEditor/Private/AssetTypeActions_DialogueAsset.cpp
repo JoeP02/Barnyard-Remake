@@ -33,17 +33,17 @@ bool FAssetTypeActions_DialogueAsset::HasActions(const TArray<UObject*>& InObjec
 
 void FAssetTypeActions_DialogueAsset::GetActions(const TArray<UObject*>& InObjects, FMenuBuilder& MenuBuilder)
 {
-	auto LegacyDialogues = GetTypedWeakObjectPtrs<UDialogueAsset>(InObjects);
+	//auto LegacyDialogues = GetTypedWeakObjectPtrs<UDialogueAsset>(InObjects);
 
-	MenuBuilder.AddMenuEntry(
-		LOCTEXT("ConvertLegacyDialogueAssetToBlueprint", "Convert Legacy Dialogue Asset To Blueprint"),
-		LOCTEXT("ConvertLegacyDialogueAssetToBlueprintDescription", "Converts a Legacy Dialogue Asset into a new Dialogue Blueprint."),
-		FSlateIcon(FEditorStyle::GetStyleSetName(),
-			"LevelEditor.ViewOptions"),
-		FUIAction(
-			FExecuteAction::CreateSP(this,
-				&FAssetTypeActions_DialogueAsset::ConvertLegacyDialogueAssetsToBlueprint, LegacyDialogues),
-			FCanExecuteAction()));
+	//MenuBuilder.AddMenuEntry(
+	//	LOCTEXT("ConvertLegacyDialogueAssetToBlueprint", "Convert Legacy Dialogue Asset To Blueprint"),
+	//	LOCTEXT("ConvertLegacyDialogueAssetToBlueprintDescription", "Converts a Legacy Dialogue Asset into a new Dialogue Blueprint."),
+	//	FSlateIcon(FEditorStyle::GetStyleSetName(),
+	//		"LevelEditor.ViewOptions"),
+	//	FUIAction(
+	//		FExecuteAction::CreateSP(this,
+	//			&FAssetTypeActions_DialogueAsset::ConvertLegacyDialogueAssetsToBlueprint, LegacyDialogues),
+	//		FCanExecuteAction()));
 }
 
 void FAssetTypeActions_DialogueAsset::ConvertLegacyDialogueAssetsToBlueprint(TArray<TWeakObjectPtr<UDialogueAsset>> Objects)

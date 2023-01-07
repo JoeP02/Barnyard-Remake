@@ -69,7 +69,7 @@ FQuestDetailsSummoner::FQuestDetailsSummoner(TSharedPtr<class FQuestGraphEditor>
 {
 
 	TabLabel = LOCTEXT("QuestDetailsLabel", "Details");
-	TabIcon = FSlateIcon(FEditorStyle::GetStyleSetName(), "Kismet.Tabs.Components");
+	TabIcon = FSlateIcon(FAppStyle::GetAppStyleSetName(), "Kismet.Tabs.Components");
 
 	bIsSingleton = true;
 

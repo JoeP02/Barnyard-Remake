@@ -168,7 +168,7 @@ void SQuestGraphNode::UpdateGraphNode()
 		.VAlign(VAlign_Fill)
 		[
 			SNew(SBorder)
-			.BorderImage(FEditorStyle::GetBrush("BTEditor.Graph.BTNode.Body"))
+			.BorderImage(FAppStyle::GetBrush("BTEditor.Graph.BTNode.Body"))
 		.BorderBackgroundColor(this, &SQuestGraphNode::GetBorderColor)
 		[
 			SNew(SOverlay)
@@ -210,7 +210,7 @@ void SQuestGraphNode::UpdateGraphNode()
 		.ColorAndOpacity(this, &SQuestGraphNode::GetNodeTitleColor)
 		.Justification(ETextJustify::Center)
 		.Clipping(EWidgetClipping::Inherit)
-		.TextStyle(FEditorStyle::Get(), TEXT("PhysicsAssetEditor.Tools.Font"))
+		.TextStyle(FAppStyle::Get(), TEXT("PhysicsAssetEditor.Tools.Font"))
 		]
 	+ SVerticalBox::Slot()
 		.VAlign(VAlign_Bottom)
@@ -232,7 +232,7 @@ void SQuestGraphNode::UpdateGraphNode()
 		.Visibility(this, &SQuestGraphNode::GetEventsVis)
 		.Justification(ETextJustify::Center)
 		.AutoWrapText(true)
-		.TextStyle(FEditorStyle::Get(), TEXT("PhysicsAssetEditor.Tools.Font"))
+		.TextStyle(FAppStyle::Get(), TEXT("PhysicsAssetEditor.Tools.Font"))
 		.ColorAndOpacity(this, &SQuestGraphNode::GetEventsColor)
 		]
 		]
@@ -447,7 +447,7 @@ TSharedRef<SWidget> SQuestGraphNodePin::GetDefaultValueWidget()
 
 const FSlateBrush* SQuestGraphNodePin::GetPinBorder() const
 {
-	return FEditorStyle::GetBrush(TEXT("Graph.StateNode.Body"));
+	return FAppStyle::GetBrush(TEXT("Graph.StateNode.Body"));
 }
 
 #undef LOCTEXT_NAMESPACE

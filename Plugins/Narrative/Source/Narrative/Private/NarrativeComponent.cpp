@@ -58,6 +58,17 @@ void UNarrativeComponent::BeginPlay()
 	OwnerPC = GetOwningController();
 }
 
+void UNarrativeComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	//Tick the current dialogue if we have one 
+	if (CurrentDialogue)
+	{
+		CurrentDialogue->Tick(DeltaTime);
+	}
+}
+
 void UNarrativeComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 
@@ -265,21 +276,30 @@ bool UNarrativeComponent::BeginDialogue(TSubclassOf<class UDialogue> DialogueCla
 			}
 
 			//Attempt to begin the dialogue, and if successful inform client to do the same 
-			CurrentDialogue = MakeDialogue(DialogueClass, NPC, StartFromID);
+			CurrentDialogue = MakeDialogue(DialogueClass);
 
 			if (CurrentDialogue)
 			{
-				OnDialogueBegan.Broadcast(CurrentDialogue);
-
-				//This is a networked game, need to inform client to begin this dialogue 
-				if (GetNetMode() != NM_Standalone)
+				if (CurrentDialogue->Initialize(this, NPC, StartFromID))
 				{
-					ClientBeginDialogue(DialogueClass, NPC, CurrentDialogue->MakeIDsFromNPCNodes(CurrentDialogue->NPCReplyChain), CurrentDialogue->MakeIDsFromPlayerNodes(CurrentDialogue->AvailableResponses));
+					OnDialogueBegan.Broadcast(CurrentDialogue);
+
+					//This is a networked game, need to inform client to begin this dialogue 
+					if (GetNetMode() != NM_Standalone)
+					{
+						ClientBeginDialogue(DialogueClass, NPC, CurrentDialogue->MakeIDsFromNPCNodes(CurrentDialogue->NPCReplyChain), CurrentDialogue->MakeIDsFromPlayerNodes(CurrentDialogue->AvailableResponses));
+					}
+
+					CurrentDialogue->Play();
+
+					return true;
 				}
-
-				CurrentDialogue->Play();
-
-				return true;
+				else
+				{	
+					//For some reason the dialogue failed to initialize
+					CurrentDialogue = nullptr;
+					return false;
+				}
 			}
 		}
 	}
@@ -302,14 +322,22 @@ void UNarrativeComponent::ClientBeginDialogue_Implementation(TSubclassOf<class U
 		}
 
 		//Attempt to begin the dialogue, and if successful inform client to do the same 
-		CurrentDialogue = MakeDialogue(DialogueClass, NPC);
+		CurrentDialogue = MakeDialogue(DialogueClass);
 
 		if (CurrentDialogue)
 		{
-			//Created dialogue won't have a valid chunk yet on the client - use the servers authed chunk it sent
-			ClientRecieveDialogueChunk(NPCReplyChainIDs, AvailableResponseIDs);
+			if (CurrentDialogue->Initialize(SharedNarrativeComp, NPC, NAME_None))
+			{
+				//Created dialogue won't have a valid chunk yet on the client - use the servers authed chunk it sent
+				ClientRecieveDialogueChunk(NPCReplyChainIDs, AvailableResponseIDs);
 
-			OnDialogueBegan.Broadcast(CurrentDialogue);
+				OnDialogueBegan.Broadcast(CurrentDialogue);
+			}
+			else
+			{
+				//Current dialogue failed to initialize on the client - this should never happen
+				CurrentDialogue = nullptr;
+			}
 		}
 	}
 }
@@ -511,11 +539,21 @@ bool UNarrativeComponent::CompleteNarrativeTask_Internal(const FString& RawTaskS
 			bTaskWasRelevant = true;
 		}
 
-		for (auto& QuestInProgress : QuestList)
+		bool bUpdatedQuest = false;
+
+		//Use index based iteration as QuestList can change during iteration
+		for (int32 i = 0; i < QuestList.Num(); ++i)
 		{
-			if (UpdateQuest(QuestInProgress, RawTaskString) != EQuestProgress::QP_NoChange)
+			if (QuestList.IsValidIndex(i))
 			{
-				bTaskWasRelevant = true;
+				if (UQuest* QuestInProgress = QuestList[i])
+				{
+					if (UpdateQuest(QuestInProgress, RawTaskString) != EQuestProgress::QP_NoChange)
+					{
+						bTaskWasRelevant = true;
+						bUpdatedQuest = true;
+					}
+				}
 			}
 		}
 
@@ -526,7 +564,7 @@ bool UNarrativeComponent::CompleteNarrativeTask_Internal(const FString& RawTaskS
 			SendNarrativeUpdate(FNarrativeUpdate::CompleteTask(UQuest::StaticClass(), RawTaskString)); 
 		}
 
-		return bTaskWasRelevant;
+		return bUpdatedQuest;
 	}
 	return false;
 }
@@ -557,7 +595,7 @@ EQuestProgress UNarrativeComponent::UpdateQuest(UQuest* QuestToUpdate, const FSt
 	return EQuestProgress::QP_NoChange;
 }
 
-class UDialogue* UNarrativeComponent::MakeDialogue(TSubclassOf<class UDialogue> DialogueClass, class AActor* NPC, FName StartFromID /*= NAME_None*/)
+class UDialogue* UNarrativeComponent::MakeDialogue(TSubclassOf<class UDialogue> DialogueClass)
 {
 	if (IsValid(DialogueClass))
 	{
@@ -569,10 +607,8 @@ class UDialogue* UNarrativeComponent::MakeDialogue(TSubclassOf<class UDialogue> 
 
 		if (UDialogue* NewDialogue = NewObject<UDialogue>(GetOwner(), DialogueClass))
 		{
-			if (NewDialogue->Initialize(this, NPC, StartFromID))
-			{
-				return NewDialogue;
-			}
+
+			return NewDialogue;
 		}
 	}
 	return nullptr;

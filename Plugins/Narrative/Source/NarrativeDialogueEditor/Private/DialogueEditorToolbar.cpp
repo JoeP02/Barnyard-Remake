@@ -60,7 +60,7 @@ void FDialogueEditorToolbar::FillModesToolbar(FToolBarBuilder& ToolbarBuilder)
 		.OnSetActiveMode(SetActiveMode)
 		.CanBeSelected(DialogueEditorPtr.Get(), &FDialogueGraphEditor::CanAccessDialogueEditorMode)
 		.ToolTipText(LOCTEXT("DialogueEditorModeButtonTooltip", "Switch to Dialogue Designer Mode"))
-		.IconImage(FEditorStyle::GetBrush("BTEditor.SwitchToBehaviorTreeMode"))
+		.IconImage(FAppStyle::GetBrush("BTEditor.SwitchToBehaviorTreeMode"))
 		//.SmallIconImage(FEditorStyle::GetBrush("BTEditor.SwitchToBehaviorTreeMode.Small"))
 	);
 
