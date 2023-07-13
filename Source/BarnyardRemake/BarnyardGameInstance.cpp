@@ -3,6 +3,7 @@
 
 #include "BarnyardGameInstance.h"
 
+#include "SLoadingScreenWidget.h"
 #include "Runtime/MoviePlayer/Public/MoviePlayer.h"
 #include "BarnyardRemake/SLoadingScreenWidget.h"
 
@@ -29,3 +30,9 @@ void UBarnyardGameInstance::EndLoadingScreen(UWorld* InLoadedLevel)
 {
 
 }
+
+AActor* UBarnyardGameInstance::GetDefaultActorObject(TSubclassOf<AActor> Actor)
+{
+	return Actor.GetDefaultObject();
+}
+

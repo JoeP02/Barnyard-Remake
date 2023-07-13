@@ -27,6 +27,11 @@
 			"Name": "Narrative",
 			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/b03174e0a1cc4de4b17dcfb2a0ba6884"
+		},
+		{
+			"Name": "EasySkyV2",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/377238e239a5438e9313a23d1aee5440"
 		}
 	]
 }

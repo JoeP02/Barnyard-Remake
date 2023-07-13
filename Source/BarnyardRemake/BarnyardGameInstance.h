@@ -25,4 +25,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FSlateBrush BackgroundImage;
+	
+	UFUNCTION(BlueprintCallable)
+	AActor* GetDefaultActorObject(TSubclassOf<AActor> Actor);
 };
