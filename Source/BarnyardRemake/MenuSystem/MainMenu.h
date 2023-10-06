@@ -48,11 +48,10 @@ private:
 
 	UPROPERTY(Meta = (BindWidget))
 	class UButton* btn_JoinGame;
+	
+	UButton* JoinGameButton;
 
 	/*
-	UPROPERTY(Meta = (BindWidget))
-	class UButton* JoinGameButton;
-	
 	UPROPERTY(Meta = (BindWidget))
 	class UButton* HostGameButton;
 

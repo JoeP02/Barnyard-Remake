@@ -19,5 +19,8 @@ public:
 
 	UPROPERTY(Meta = (BindWidget))
 	class UPanelWidget* SessionList;
+
+	UPROPERTY(Meta = (BindWidget))
+	class UButton* btn_JoinSelectedGame;
 	
 };

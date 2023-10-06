@@ -66,6 +66,9 @@ bool UMainMenu::Initialize()
 	if (!ensure(SinglePlayGameButton != nullptr)) return false;
 	SinglePlayGameButton->OnClicked.AddDynamic(this, &UMainMenu::StartSinglePlay);
 	*/
+
+	JoinGameButton = WBP_JoinGameScreen->btn_JoinSelectedGame;
+	JoinGameButton->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
 	
 	return true;
 }
@@ -122,6 +125,7 @@ void UMainMenu::SetServerList(TArray<FServerData> ServerNames)
 
 void UMainMenu::SelectIndex(uint32 Index)
 {
+	UE_LOG(LogTemp, Warning, TEXT("New Selection"));
 	SelectedIndex = Index;
 	UpdateChildren();
 }

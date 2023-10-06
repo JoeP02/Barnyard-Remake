@@ -153,6 +153,8 @@ void UBarnyardGameInstance::RefreshServerList()
 		// SessionSearch->bIsLanQuery = true;
 		SessionSearch->MaxSearchResults = 100;
 		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+		SessionSearch->QuerySettings.Set(SEARCH_KEYWORDS, FString("BarnyardLobby"), EOnlineComparisonOp::Equals);
+		SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
 		UE_LOG(LogTemp, Warning, TEXT("Starting Session Find"));
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
