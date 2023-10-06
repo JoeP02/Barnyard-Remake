@@ -12,12 +12,20 @@
 #include "Interfaces/OnlineFriendsInterface.h"
 #include "Interfaces/OnlineIdentityInterface.h"
 #include "Kismet/GameplayStatics.h"
+#include "MenuSystem/MainMenu.h"
 #include "Net/UnrealNetwork.h"
 
 const FName DemoSessionName = FName("Test Session");
+const static FName SESSION_NAME = TEXT("My Session Game");
+const static FName SERVER_NAME_SETTINGS_KEY = TEXT("ServerName");
 
-UBarnyardGameInstance::UBarnyardGameInstance()
+UBarnyardGameInstance::UBarnyardGameInstance(const FObjectInitializer &ObjectInitializer)
 {
+	ConstructorHelpers::FClassFinder<UUserWidget> MenuBPClass(TEXT("/Game/UI/MultiplayerMenu/WBP_MultiplayerMainMenu"));
+	if (!ensure(MenuBPClass.Class != nullptr)) return;
+	
+	MainMenu = MenuBPClass.Class;
+	
 	bIsLoggedIn = false;
 }
 
@@ -30,7 +38,33 @@ void UBarnyardGameInstance::Init()
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UBarnyardGameInstance::EndLoadingScreen);
 
 	OnlineSubsystem = IOnlineSubsystem::Get();
+	SessionInterface = OnlineSubsystem->GetSessionInterface();
+	if (SessionInterface.IsValid())
+	{
+		SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UBarnyardGameInstance::OnCreateSessionComplete);
+		SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UBarnyardGameInstance::OnDestroySessionComplete);
+		SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UBarnyardGameInstance::OnFindSessionsComplete);
+		SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UBarnyardGameInstance::OnJoinSessionComplete);
+	}
+
+	if (GEngine != nullptr)
+	{
+		GEngine->OnNetworkFailure().AddUObject(this, &UBarnyardGameInstance::OnNetworkFailure);
+	}
+	
 	Login();
+}
+
+void UBarnyardGameInstance::LoadMenuWidget()
+{
+	if (!ensure(MainMenu != nullptr)) return;
+	
+	MainMenuWidget = CreateWidget<UMainMenu>(this, MainMenu);
+	if (!ensure(MainMenuWidget != nullptr)) return;
+
+	MainMenuWidget->Setup();	
+
+	MainMenuWidget->SetMenuInterface(this);
 }
 
 void UBarnyardGameInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -56,6 +90,82 @@ void UBarnyardGameInstance::EndLoadingScreen(UWorld* InLoadedLevel)
 
 }
 
+void UBarnyardGameInstance::Host(FString ServerName, FString ServerAddress)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Host Called Game Instance"));
+	
+	DesiredServerName = ServerName;
+	DesiredServerAddress = ServerAddress;
+	
+	if (SessionInterface.IsValid())
+	{
+		auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
+		if (ExistingSession != nullptr)
+		{
+			SessionInterface->DestroySession(NAME_GameSession);
+		}
+		else
+		{
+			CreateSession();
+		}
+	}
+	else
+		UE_LOG(LogTemp, Warning, TEXT("JPG - Failed at Host()"));
+}
+
+void UBarnyardGameInstance::Join(uint32 Index)
+{
+	if (!SessionInterface.IsValid())
+	{
+		return;
+	}
+
+	if (!SessionSearch.IsValid())
+	{
+		return;
+	}
+	
+	if (MainMenuWidget != nullptr)
+	{
+		MainMenuWidget->Teardown();
+	}
+	
+	SessionInterface->JoinSession(0, NAME_GameSession, SessionSearch->SearchResults[Index]);
+}
+
+void UBarnyardGameInstance::SinglePlayer(FString MapName, FString GameMode)
+{
+}
+
+void UBarnyardGameInstance::StartSession()
+{
+	if (SessionInterface.IsValid())
+	{
+		SessionInterface->StartSession(NAME_GameSession);
+	}
+}
+
+void UBarnyardGameInstance::RefreshServerList()
+{
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	if (SessionSearch.IsValid())
+	{
+		// SessionSearch->bIsLanQuery = true;
+		SessionSearch->MaxSearchResults = 100;
+		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+		UE_LOG(LogTemp, Warning, TEXT("Starting Session Find"));
+		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+	}
+}
+
+void UBarnyardGameInstance::LoadMainMenu()
+{
+	APlayerController* PlayerController = GetFirstLocalPlayerController();
+	if (!ensure(PlayerController != nullptr)) return;
+
+	PlayerController->ClientTravel("/Game/MenuSystem/Maps/MainMenu", ETravelType::TRAVEL_Absolute);
+}
+
 AActor* UBarnyardGameInstance::GetDefaultActorObject(TSubclassOf<AActor> Actor)
 {
 	return Actor.GetDefaultObject();
@@ -67,12 +177,17 @@ void UBarnyardGameInstance::Login()
 	{
 		if (IOnlineIdentityPtr Identity = OnlineSubsystem->GetIdentityInterface())
 		{
+			if (Identity->GetLoginStatus(0) == ELoginStatus::Type::LoggedIn)
+			{
+				Identity->Logout(0);
+			}
+			
 			FOnlineAccountCredentials Credentials;
 			Credentials.Type = FString("developer");
 			
 			if (Credentials.Type == FString("developer"))
 			{
-				Credentials.Id = FString("localhost:8080");
+				Credentials.Id = FString("localhost:8081");
 				Credentials.Token = FString("JosephPeirson");
 			}
 			else if (Credentials.Type == FString("accountportal"))
@@ -102,58 +217,69 @@ void UBarnyardGameInstance::OnLoginComplete(int32 LocalUserNum, bool bWasSuccess
 	}
 }
 
-void UBarnyardGameInstance::CreateSession(int32 NumberOfPlayers)
+void UBarnyardGameInstance::CreateSession()
 {
 	if (bIsLoggedIn)
 	{
-		if (OnlineSubsystem)
+		if (SessionInterface.IsValid())
 		{
-			if (IOnlineSessionPtr SessionPtr = OnlineSubsystem->GetSessionInterface())
+			FOnlineSessionSettings SessionSettings;
+			if (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL")
 			{
-				FOnlineSessionSettings SessionSettings;
-				SessionSettings.bIsDedicated = false;
-				SessionSettings.bIsLANMatch = false;
-				SessionSettings.bShouldAdvertise = true;
-				SessionSettings.NumPublicConnections = NumberOfPlayers;
-				SessionSettings.bAllowJoinInProgress = true;
-				SessionSettings.bAllowJoinViaPresence = true;
-				SessionSettings.bUsesPresence = true;
-				SessionSettings.bUseLobbiesIfAvailable = true;
-
-				numberOfPlayers = NumberOfPlayers;
-				
-				SessionSettings.Set(SEARCH_KEYWORDS, FString("UpskillLobby"), EOnlineDataAdvertisementType::ViaOnlineService);
-
-				SessionPtr->OnCreateSessionCompleteDelegates.AddUObject(this, &UBarnyardGameInstance::OnCreateSessionComplete);
-				SessionPtr->CreateSession(0, DemoSessionName, SessionSettings);
+				SessionSettings.bIsLANMatch = true;
 			}
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Session Cannot Be Created: User Not Logged In"));
-	}
-}
-
-void UBarnyardGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
-{
-	UE_LOG(LogTemp, Warning, TEXT("Success: %d"), bWasSuccessful)
-
-	if (OnlineSubsystem && bWasSuccessful)
-	{
-		if (IOnlineSessionPtr SessionPtr = OnlineSubsystem->GetSessionInterface())
-		{
-			SessionPtr->ClearOnCreateSessionCompleteDelegates(this);
-
-			UGameplayStatics::OpenLevel(GetWorld(), "Lobby", true, FString("listen"));
+			else
+			{
+				SessionSettings.bIsLANMatch = false;
+			}
+		
+			SessionSettings.NumPublicConnections = 5;
+			SessionSettings.bShouldAdvertise = true;
+			SessionSettings.bAllowJoinInProgress = true;
+			SessionSettings.bAllowJoinViaPresence = true;
+			SessionSettings.bUsesPresence = true;
+			SessionSettings.bUseLobbiesIfAvailable = true;
+			SessionSettings.bIsDedicated = false;
+			SessionSettings.Set(SERVER_NAME_SETTINGS_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+			SessionSettings.Set(SEARCH_KEYWORDS, FString("BarnyardLobby"), EOnlineDataAdvertisementType::ViaOnlineService);
+		
+			SessionInterface->CreateSession(0, NAME_GameSession, SessionSettings);	
 		}
 	}
 	else
 	{
 		ErrorScreenInstance = CreateWidget<UErrorMenu>(GetWorld(), ErrorScreen);
-		ErrorScreenInstance->ErrorMessageToDisplay = FText::FromString("Failed To Create Session. Please Check Your Network Connection.");
+		ErrorScreenInstance->ErrorMessageToDisplay = FText::FromString("Failed To Create Session. User Not Logged In.");
 		ErrorScreenInstance->AddToViewport();
 	}
+}
+
+void UBarnyardGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
+{
+	if (!bWasSuccessful)
+	{
+		ErrorScreenInstance = CreateWidget<UErrorMenu>(GetWorld(), ErrorScreen);
+		ErrorScreenInstance->ErrorMessageToDisplay = FText::FromString("Failed To Create Session. Please Check Your Network Connection.");
+		ErrorScreenInstance->AddToViewport();
+		return;
+	}
+	
+	if (MainMenuWidget != nullptr)
+	{
+		MainMenuWidget->Teardown();
+	}
+	
+	UEngine* Engine = GetEngine();
+	if (!ensure(Engine != nullptr)) return;
+
+	Engine->AddOnScreenDebugMessage(0, 2, FColor::Green, TEXT("Hosting"));
+
+	UWorld* World = GetWorld();
+	if (!ensure(World != nullptr)) return;
+
+	World->ServerTravel("/Game/Levels/Lobby?listen");
+
+	UE_LOG(LogTemp, Warning, TEXT("JPG - End Of OnCreateSessionComplete"));
 }
 
 void UBarnyardGameInstance::DestroySession()
@@ -173,14 +299,9 @@ void UBarnyardGameInstance::DestroySession()
 
 void UBarnyardGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Success: %d"), bWasSuccessful)
-
-	if (OnlineSubsystem)
+	if (bWasSuccessful)
 	{
-		if (IOnlineSessionPtr SessionPtr = OnlineSubsystem->GetSessionInterface())
-		{
-			SessionPtr->ClearOnDestroySessionCompleteDelegates(this);
-		}
+		CreateSession();
 	}
 }
 
@@ -196,31 +317,43 @@ void UBarnyardGameInstance::FindSession()
 				SearchSettings->QuerySettings.Set(SEARCH_KEYWORDS, FString("UpskillLobby"), EOnlineComparisonOp::Equals);
 				SearchSettings->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
 				
-				SessionPtr->OnFindSessionsCompleteDelegates.AddUObject(this, &UBarnyardGameInstance::OnFindSessionComplete);
+				SessionPtr->OnFindSessionsCompleteDelegates.AddUObject(this, &UBarnyardGameInstance::OnFindSessionsComplete);
 				SessionPtr->FindSessions(0, SearchSettings.ToSharedRef());
 			}
 		}
 	}
 }
 
-void UBarnyardGameInstance::OnFindSessionComplete(bool bWasSuccessful)
+void UBarnyardGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Success: %d"), bWasSuccessful);
-	
-	if (bWasSuccessful)
+	if (bWasSuccessful && SessionSearch.IsValid() && MainMenuWidget != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Found %d Lobbies"), SearchSettings->SearchResults.Num());
-		if (OnlineSubsystem)
+		UE_LOG(LogTemp, Warning, TEXT("Finished Session Find"));
+
+		TArray<FServerData> ServerNames;
+		for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
 		{
-			if (IOnlineSessionPtr SessionPtr = OnlineSubsystem->GetSessionInterface())
+			UE_LOG(LogTemp, Warning, TEXT("Found Session: %s"), *SearchResult.GetSessionIdStr());
+			FServerData Data;
+			Data.Name = *SearchResult.GetSessionIdStr();
+			Data.HostUsername = *SearchResult.Session.OwningUserName;
+			Data.MaxPlayers = SearchResult.Session.SessionSettings.NumPublicConnections;
+			Data.CurrentPlayers = Data.MaxPlayers - SearchResult.Session.NumOpenPublicConnections;
+			Data.Ping = SearchResult.PingInMs;
+			FString ServerName;
+			if (SearchResult.Session.SessionSettings.Get(SERVER_NAME_SETTINGS_KEY, ServerName))
 			{
-				if (SearchSettings->SearchResults.Num())
-				{
-					SessionPtr->OnJoinSessionCompleteDelegates.AddUObject(this, &UBarnyardGameInstance::OnJoinSessionComplete);
-					SessionPtr->JoinSession(0, DemoSessionName, SearchSettings->SearchResults[0]);
-				}
+				Data.Name = ServerName;
 			}
+			else
+			{
+				Data.Name = "Name Unavailable";
+			}
+			
+			ServerNames.Add(Data);
 		}
+
+		MainMenuWidget->SetServerList(ServerNames);
 	}
 	else
 	{
@@ -228,30 +361,31 @@ void UBarnyardGameInstance::OnFindSessionComplete(bool bWasSuccessful)
 		ErrorScreenInstance->ErrorMessageToDisplay = FText::FromString("Failed To Join Session. Please Check Your Network Connection.");
 		ErrorScreenInstance->AddToViewport();
 	}
-	
-	if (IOnlineSessionPtr SessionPtr = OnlineSubsystem->GetSessionInterface())
-	{
-		SessionPtr->ClearOnFindSessionsCompleteDelegates(this);
-	}
 }
 
 void UBarnyardGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
-	if (OnlineSubsystem)
+	if (!SessionInterface.IsValid())
 	{
-		if (IOnlineSessionPtr SessionPtr = OnlineSubsystem->GetSessionInterface())
-		{
-			FString ConnectionInfo = FString();
-			SessionPtr->GetResolvedConnectString(SessionName, ConnectionInfo);
-			if (!ConnectionInfo.IsEmpty())
-			{
-				if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-				{
-					PC->ClientTravel(ConnectionInfo, TRAVEL_Absolute);
-				}
-			}
-		}
+		return;
 	}
+	
+	FString Address;
+	if(!SessionInterface->GetResolvedConnectString(SessionName, Address))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Could Not Get Connect String"));
+		return;
+	}
+	
+	UEngine* Engine = GetEngine();
+	if (!ensure(Engine != nullptr)) return;
+	
+	Engine->AddOnScreenDebugMessage(0, 2, FColor::Green, FString::Printf(TEXT("Joining %s"), *Address));
+	
+	APlayerController* PlayerController = GetFirstLocalPlayerController();
+	if (!ensure(PlayerController != nullptr)) return;
+	
+	PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 }
 
 void UBarnyardGameInstance::GetAllFriends()
@@ -289,6 +423,12 @@ void UBarnyardGameInstance::OnReadFriendsListComplete(int32 LocalUserNum, bool b
 			}
 		}
 	}
+}
+
+void UBarnyardGameInstance::OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType,
+	const FString& ErrorString)
+{
+	LoadMainMenu();
 }
 
 void UBarnyardGameInstance::ShowInviteUI()
