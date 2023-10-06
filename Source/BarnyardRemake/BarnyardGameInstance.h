@@ -63,6 +63,8 @@ public:
 	
 	UPROPERTY(Replicated) int32 numberOfPlayers;
 	TSharedPtr<FOnlineSessionSearch> SearchSettings;
+	
+	UPROPERTY(EditAnywhere) bool bIsLAN = false;
 
 	FString DesiredServerName;
 	FString DesiredServerAddress;

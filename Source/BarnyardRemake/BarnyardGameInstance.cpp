@@ -234,6 +234,11 @@ void UBarnyardGameInstance::CreateSession()
 			{
 				SessionSettings.bIsLANMatch = false;
 			}
+
+			if (bIsLAN)
+			{
+				SessionSettings.bIsLANMatch = true;
+			}
 		
 			SessionSettings.NumPublicConnections = 5;
 			SessionSettings.bShouldAdvertise = true;
