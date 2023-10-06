@@ -7,10 +7,12 @@
 #include "SLoadingScreenWidget.h"
 #include "Runtime/MoviePlayer/Public/MoviePlayer.h"
 #include "BarnyardRemake/SLoadingScreenWidget.h"
+#include "Blueprint/UserWidget.h"
 #include "Interfaces/OnlineExternalUIInterface.h"
 #include "Interfaces/OnlineFriendsInterface.h"
 #include "Interfaces/OnlineIdentityInterface.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 const FName DemoSessionName = FName("Test Session");
 
@@ -29,6 +31,13 @@ void UBarnyardGameInstance::Init()
 
 	OnlineSubsystem = IOnlineSubsystem::Get();
 	Login();
+}
+
+void UBarnyardGameInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UBarnyardGameInstance, numberOfPlayers);
 }
 
 void UBarnyardGameInstance::BeginLoadingScreen(const FString& LevelName)
@@ -93,7 +102,7 @@ void UBarnyardGameInstance::OnLoginComplete(int32 LocalUserNum, bool bWasSuccess
 	}
 }
 
-void UBarnyardGameInstance::CreateSession()
+void UBarnyardGameInstance::CreateSession(int32 NumberOfPlayers)
 {
 	if (bIsLoggedIn)
 	{
@@ -105,11 +114,13 @@ void UBarnyardGameInstance::CreateSession()
 				SessionSettings.bIsDedicated = false;
 				SessionSettings.bIsLANMatch = false;
 				SessionSettings.bShouldAdvertise = true;
-				SessionSettings.NumPublicConnections = 5;
+				SessionSettings.NumPublicConnections = NumberOfPlayers;
 				SessionSettings.bAllowJoinInProgress = true;
 				SessionSettings.bAllowJoinViaPresence = true;
 				SessionSettings.bUsesPresence = true;
 				SessionSettings.bUseLobbiesIfAvailable = true;
+
+				numberOfPlayers = NumberOfPlayers;
 				
 				SessionSettings.Set(SEARCH_KEYWORDS, FString("UpskillLobby"), EOnlineDataAdvertisementType::ViaOnlineService);
 
@@ -128,13 +139,20 @@ void UBarnyardGameInstance::OnCreateSessionComplete(FName SessionName, bool bWas
 {
 	UE_LOG(LogTemp, Warning, TEXT("Success: %d"), bWasSuccessful)
 
-	if (OnlineSubsystem)
+	if (OnlineSubsystem && bWasSuccessful)
 	{
 		if (IOnlineSessionPtr SessionPtr = OnlineSubsystem->GetSessionInterface())
 		{
 			SessionPtr->ClearOnCreateSessionCompleteDelegates(this);
-			GetWorld()->ServerTravel(FString("ThirdPersonExampleMap?listen"), false);
+
+			UGameplayStatics::OpenLevel(GetWorld(), "Lobby", true, FString("listen"));
 		}
+	}
+	else
+	{
+		ErrorScreenInstance = CreateWidget<UErrorMenu>(GetWorld(), ErrorScreen);
+		ErrorScreenInstance->ErrorMessageToDisplay = FText::FromString("Failed To Create Session. Please Check Your Network Connection.");
+		ErrorScreenInstance->AddToViewport();
 	}
 }
 
@@ -203,6 +221,12 @@ void UBarnyardGameInstance::OnFindSessionComplete(bool bWasSuccessful)
 				}
 			}
 		}
+	}
+	else
+	{
+		ErrorScreenInstance = CreateWidget<UErrorMenu>(GetWorld(), ErrorScreen);
+		ErrorScreenInstance->ErrorMessageToDisplay = FText::FromString("Failed To Join Session. Please Check Your Network Connection.");
+		ErrorScreenInstance->AddToViewport();
 	}
 	
 	if (IOnlineSessionPtr SessionPtr = OnlineSubsystem->GetSessionInterface())

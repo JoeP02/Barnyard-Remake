@@ -8,7 +8,7 @@ public class BarnyardRemake : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "OnlineSubsystemEOS", "OnlineSubsystem" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "OnlineSubsystemEOS", "OnlineSubsystem", "UMG", "UMGEditor" });
 
 		PublicDependencyModuleNames.AddRange(new string[] { "MoviePlayer" });
 		

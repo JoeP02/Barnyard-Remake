@@ -6,6 +6,7 @@
 #include "OnlineSessionSettings.h"
 #include "Engine/GameInstance.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include "UI/ErrorMenu.h"
 #include "BarnyardGameInstance.generated.h"
 
 /**
@@ -20,6 +21,8 @@ public:
 	UBarnyardGameInstance();
 	
 	virtual void Init() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 
 	UFUNCTION()
 	virtual void BeginLoadingScreen(const FString& LevelName);
@@ -36,9 +39,16 @@ public:
 	void Login();
 	void OnLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error);
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UErrorMenu> ErrorScreen;
+	UErrorMenu* ErrorScreenInstance;
+
 	UFUNCTION(BlueprintCallable)
-	void CreateSession();
+	void CreateSession(int32 NumberOfPlayers);
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
+
+	UPROPERTY(Replicated)
+	int32 numberOfPlayers;
 
 	UFUNCTION(BlueprintCallable)
 	void DestroySession();
