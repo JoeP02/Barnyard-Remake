@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "MenuInterface.h"
 #include "MenuWidget.h"
+#include "BarnyardRemake/JoinGameScreen.h"
 #include "Blueprint/UserWidget.h"
 #include "MainMenu.generated.h"
 
@@ -74,10 +75,9 @@ private:
 	/*
 	UPROPERTY(Meta = (BindWidget))
 	class UButton* SinglePlayGameButton;
-
-	UPROPERTY(Meta = (BindWidget))
-	class UPanelWidget* ServerList;
 	*/
+
+	// UJoinGameScreen* JoinGameScreen;
 
 	UPROPERTY(Meta = (BindWidget))
 	class UWidget* WBP_SinglePlayerScreen;
@@ -86,7 +86,7 @@ private:
 	class UWidget* WBP_OptionsScreen;
 	
 	UPROPERTY(Meta = (BindWidget))
-	class UWidget* WBP_JoinGameScreen;
+	class UJoinGameScreen* WBP_JoinGameScreen;
 
 	UPROPERTY(Meta = (BindWidget))
 	class UWidget* WBP_HostGameScreen;

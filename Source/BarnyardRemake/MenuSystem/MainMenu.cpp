@@ -99,7 +99,9 @@ void UMainMenu::SetServerList(TArray<FServerData> ServerNames)
 	UWorld* World = this->GetWorld();
 	if (!ensure(World != nullptr)) return;
 
-	ContextMenu->ClearChildren();
+	WBP_JoinGameScreen->SessionList->ClearChildren();
+
+	UE_LOG(LogTemp, Warning, TEXT("Found Sessions: %d"), ServerNames.Num());
 
 	uint32 i = 0;
 	for (const FServerData& ServerData : ServerNames)
@@ -114,7 +116,7 @@ void UMainMenu::SetServerList(TArray<FServerData> ServerNames)
 		Row->Setup(this, i);
 		++i;
 		
-		ContextMenu->AddChild(Row);
+		WBP_JoinGameScreen->SessionList->AddChild(Row);
 	}
 }
 
@@ -126,9 +128,9 @@ void UMainMenu::SelectIndex(uint32 Index)
 
 void UMainMenu::UpdateChildren()
 {
-	for (int32 i = 0; i < ContextMenu->GetChildrenCount(); ++i)
+	for (int32 i = 0; i < WBP_JoinGameScreen->SessionList->GetChildrenCount(); ++i)
 	{
-		auto Row = Cast<UServerRow>(ContextMenu->GetChildAt(i));
+		auto Row = Cast<UServerRow>(WBP_JoinGameScreen->SessionList->GetChildAt(i));
 		if (Row != nullptr)
 		{
 			Row->Selected = (SelectedIndex.IsSet() && SelectedIndex.GetValue() == i);
@@ -156,6 +158,7 @@ void UMainMenu::OpenJoinMenu()
 	ContextMenu->SetActiveWidget(WBP_JoinGameScreen);
 	if (MenuInterface != nullptr)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Open Join Menu - Ready To Refresh"));
 		MenuInterface->RefreshServerList();
 	}
 }
