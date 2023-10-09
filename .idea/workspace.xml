@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="cf2b58ee-8bd4-4e22-bd33-1ee49078111a" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/Content/Levels/MG_MudJumpers.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Levels/MG_MudJumpers.umap" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Plugins/Developer/RiderLink/Intermediate/FileSystemMappings.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Plugins/Developer/RiderLink/Intermediate/FileSystemMappings.ini" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="2WWPmJubJ9D5oOuA8kohIWjRXGS" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="cf2b58ee-8bd4-4e22-bd33-1ee49078111a" name="Default Changelist" comment="" />
+      <created>1696845521404</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1696845521404</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="1031" y="498" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1696845526192">
+      <screen x="0" y="0" width="2560" height="1392" />
+    </state>
+    <state x="1031" y="498" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1392/2560.182.1920.1032@0.0.2560.1392" timestamp="1696845526192" />
+    <state x="976" y="519" key="com.intellij.ide.util.TipDialog" timestamp="1696845527567">
+      <screen x="0" y="0" width="2560" height="1392" />
+    </state>
+    <state x="976" y="519" key="com.intellij.ide.util.TipDialog/0.0.2560.1392/2560.182.1920.1032@0.0.2560.1392" timestamp="1696845527567" />
+  </component>
+</project>
