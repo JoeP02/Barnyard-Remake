@@ -273,7 +273,7 @@ void UBarnyardGameInstance::OnCreateSessionComplete(FName SessionName, bool bWas
 	
 	if (MainMenuWidget != nullptr)
 	{
-		MainMenuWidget->Teardown();
+		// MainMenuWidget->Teardown();
 	}
 	
 	UEngine* Engine = GetEngine();
